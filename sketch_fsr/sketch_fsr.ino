@@ -3,10 +3,10 @@
 #include <ESP8266WebServer.h>     //Local WebServer used to serve the configuration portal
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 #include "HTTPSRedirect.h"
-
+#include "credentials.h"
 
 // Enter Google Script ID:
-const char *GScriptId = "AKfycbytIAKlRgpoFWms--mjG8bc9anEna_KZ5_pL3lEcE6DrBFFu4VAdB0A";
+const char *GScriptId = G_SCRIPT_ID;
 
 // Enter command (insert_row or append_row) and your Google Sheets sheet name (default is Sheet1):
 String payload_base =  "{\"command\": \"insert_row\", \"sheet_name\": \"Sheet1\", \"values\": ";
@@ -97,8 +97,8 @@ void loop() {
   
   
   forceReading = analogRead(forcePin);
-  Serial.print("Analog reading = ");
-  Serial.println(forceReading);
+//  Serial.print("Analog reading = ");
+//  Serial.println(forceReading);
  
   delay(500);
 
@@ -135,8 +135,6 @@ void timer(){
   
   // Publish data to Google Sheets
   Serial.println("Publishing data...");
-  Serial.println(payload);
-  Serial.println(url);
   if(client->POST(url, host, payload)){ 
     // do stuff here if publish was successful
   }
