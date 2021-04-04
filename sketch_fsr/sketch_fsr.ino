@@ -25,9 +25,8 @@ int value0 = 0;
 int forcePin = A0;
 int forceReading;
 
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
+
+void connect(){
 
   WiFiManager wifiManager;
   //reset saved settings
@@ -74,7 +73,16 @@ void setup() {
   // delete HTTPSRedirect object
   delete client;
   client = nullptr;
+  
 }
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  connect();
+}
+
+
 
 void loop() {
 
@@ -97,8 +105,8 @@ void loop() {
   
   
   forceReading = analogRead(forcePin);
-//  Serial.print("Analog reading = ");
-//  Serial.println(forceReading);
+  Serial.print("Analog reading = ");
+  Serial.println(forceReading);
  
   delay(500);
 
@@ -109,7 +117,6 @@ void loop() {
 }
 
 void timer(){
-
   int seconds = 0;
   Serial.print("Seconds = ");
   Serial.println(seconds);
@@ -139,11 +146,11 @@ void timer(){
     // do stuff here if publish was successful
   }
   else{
-    // do stuff here if publish was not successful
+    // do stuff here if publish was not ful
     Serial.println("Error while connecting");
   }
 
 // a delay of several seconds is required before publishing again    
 delay(5000);
-
+  
 }
