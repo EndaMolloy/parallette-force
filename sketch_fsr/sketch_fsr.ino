@@ -4,6 +4,19 @@
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager WiFi Configuration Magic
 #include "HTTPSRedirect.h"
 #include "credentials.h"
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+// The pins for I2C are defined by the Wire-library. ...
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET     1
+#define SCREEN_ADDRESS 0x3C
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Enter Google Script ID:
 const char *GScriptId = G_SCRIPT_ID;
@@ -40,7 +53,6 @@ void connect(){
   Serial.println("Connection established!");  
   Serial.print("IP address:\t");
   Serial.println(WiFi.localIP());
-  
 
   // Use HTTPSRedirect class to create a new TLS connection
   client = new HTTPSRedirect(httpsPort);
@@ -70,16 +82,25 @@ void connect(){
     return;
   }
 
+
   // delete HTTPSRedirect object
   delete client;
   client = nullptr;
   
 }
 
-void setup() {
+void setup() {    
   // put your setup code here, to run once:
   Serial.begin(9600);
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+
   connect();
+  
+  display.clearDisplay();
 }
 
 
@@ -102,13 +123,20 @@ void loop() {
   else{
     Serial.println("Error creating client object!");
   }
-  
-  
+
+      // Clear the buffer.
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setCursor(0, 0);
+  display.setTextColor(WHITE);
+  display.print("Connected");
+  display.display();  
+
   forceReading = analogRead(forcePin);
   Serial.print("Analog reading = ");
   Serial.println(forceReading);
- 
-  delay(500);
+  delay(1000);
+  
 
   if(forceReading > 800){
     timer();
@@ -117,26 +145,44 @@ void loop() {
 }
 
 void timer(){
+  display.clearDisplay();
+  display.setTextSize(3);
+  display.setCursor(0, 0);
   int seconds = 0;
   Serial.print("Seconds = ");
   Serial.println(seconds);
+  display.println(seconds);
+  display.display();
   delay(1000);
     
   do {
+    display.clearDisplay();
+    display.setTextSize(3);
+    display.setCursor(0, 0);
+    display.setTextColor(WHITE);
     seconds++;
     Serial.print("Seconds = ");
     Serial.println(seconds);
+    display.println(seconds);
+    display.display();
     delay(1000); 
     forceReading = analogRead(forcePin);
   } while (forceReading > 800 );
 
-  seconds++;
   Serial.print("Seconds = ");
   Serial.println(seconds);
+  display.println(seconds);
+  delay(1000);
+  display.clearDisplay();
   
   Serial.print("Total = ");
   Serial.println(seconds);
-
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.print("Total = ");
+  display.println(seconds);
+  display.display();
+  
   // Create json object string to send to Google Sheets
   payload = payload_base + "\"" + seconds  + "\"}";
   
@@ -144,6 +190,13 @@ void timer(){
   Serial.println("Publishing data...");
   if(client->POST(url, host, payload)){ 
     // do stuff here if publish was successful
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.println("Time");
+    display.println("Successfully");
+    display.println("Logged");
+    display.display();
   }
   else{
     // do stuff here if publish was not ful
