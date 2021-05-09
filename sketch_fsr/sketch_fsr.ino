@@ -22,7 +22,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 const char *GScriptId = G_SCRIPT_ID;
 
 // Enter command (insert_row or append_row) and your Google Sheets sheet name (default is Sheet1):
-String payload_base =  "{\"command\": \"insert_row\", \"sheet_name\": \"Sheet1\", \"values\": ";
+String payload_base =  "{\"command\": \"append_row\", \"sheet_name\": \"Sheet1\", \"values\": ";
 String payload = "";
 
 
@@ -69,7 +69,7 @@ void connect(){
     int retval = client->connect(host, httpsPort);
     if (retval == 1) {
        flag = true;
-       Serial.println("Connected");
+       Serial.println("WiFi Connected");
        break;
     }
     else
@@ -97,7 +97,8 @@ void setup() {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
   }
-
+  display.setRotation(2); 
+  
   connect();
   
   display.clearDisplay();
@@ -129,7 +130,9 @@ void loop() {
   display.setTextSize(2);
   display.setCursor(0, 0);
   display.setTextColor(WHITE);
+  display.println("WiFi");
   display.print("Connected");
+//  display.flip();
   display.display();  
 
   forceReading = analogRead(forcePin);
@@ -152,6 +155,7 @@ void timer(){
   Serial.print("Seconds = ");
   Serial.println(seconds);
   display.println(seconds);
+//  display.flip();
   display.display();
   delay(1000);
     
@@ -164,6 +168,7 @@ void timer(){
     Serial.print("Seconds = ");
     Serial.println(seconds);
     display.println(seconds);
+//    display.flip();
     display.display();
     delay(1000); 
     forceReading = analogRead(forcePin);
@@ -177,10 +182,11 @@ void timer(){
   
   Serial.print("Total = ");
   Serial.println(seconds);
-  display.clearDisplay();
   display.setCursor(0, 0);
-  display.print("Total = ");
-  display.println(seconds);
+  display.setTextSize(2);
+  display.println("Total: ");
+  display.print(seconds);
+//  display.flip();
   display.display();
   
   // Create json object string to send to Google Sheets
@@ -194,8 +200,8 @@ void timer(){
     display.setCursor(0, 0);
     display.setTextSize(2);
     display.println("Time");
-    display.println("Successfully");
     display.println("Logged");
+//    display.flip();
     display.display();
   }
   else{
