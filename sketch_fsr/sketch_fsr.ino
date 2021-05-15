@@ -22,13 +22,15 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 const char *GScriptId = G_SCRIPT_ID;
 
 // Enter command (insert_row or append_row) and your Google Sheets sheet name (default is Sheet1):
-String payload_base =  "{\"command\": \"append_row\", \"sheet_name\": \"Sheet1\", \"values\": ";
+// String payload_base =  "{\"command\": \"append_row\", \"sheet_name\": \"Sheet1\", \"values\": ";
+String payload_base =  "{\"command\": \"append_row\", \"sheet_name\": ";
 String payload = "";
 
 
 const char* host = "script.google.com";
 const int httpsPort = 443;
 const char* fingerprint = "";
+const int buttonPin = 12;
 String url = String("/macros/s/") + GScriptId + "/exec";
 
 HTTPSRedirect* client = nullptr;
@@ -38,6 +40,11 @@ int value0 = 0;
 int forcePin = A0;
 int forceReading;
 
+// Button variables
+int buttonPushCounter = 0;   // counter for the number of button presses
+int buttonState = 0;         // current state of the button
+int lastButtonState = 0;     // previous state of the button
+String user = "Enda";
 
 void connect(){
 
@@ -98,6 +105,8 @@ void setup() {
     for(;;); // Don't proceed, loop forever
   }
   display.setRotation(2); 
+
+  pinMode(buttonPin, INPUT);
   
   connect();
   
@@ -125,20 +134,58 @@ void loop() {
     Serial.println("Error creating client object!");
   }
 
-      // Clear the buffer.
+// User selection
+
+// read the pushbutton input pin:
+  buttonState = digitalRead(buttonPin);
+  Serial.print("User: ");
+  Serial.println(buttonPushCounter);
+  // compare the buttonState to its previous state
+  if (buttonState != lastButtonState) {
+    // if the state has changed, increment the counter
+    if (buttonState == HIGH) {
+      // if the current state is HIGH then the button went from off to on:
+      buttonPushCounter++;
+      Serial.println("on");
+      Serial.print("User: ");
+      Serial.println(buttonPushCounter);
+    } else {
+      // if the current state is LOW then the button went from on to off:
+      Serial.println("off");
+    }
+    // Delay a little bit to avoid bouncing
+    delay(50);
+  }
+  // save the current state as the last state, for next time through the loop
+  lastButtonState = buttonState;
+  
+  if (buttonPushCounter > 1){
+      buttonPushCounter = 0;
+  }  
+
+  if (buttonPushCounter == 0 ){
+      user = "Enda";
+    }
+  else{
+      user = "Other"; 
+  }
+    
+  // Clear the buffer.
   display.clearDisplay();
-  display.setTextSize(2);
+  display.setTextSize(1);
   display.setCursor(0, 0);
   display.setTextColor(WHITE);
-  display.println("WiFi");
-  display.print("Connected");
-//  display.flip();
+  display.println("WiFi-Connected");
+  display.println();
+  display.setTextSize(2);
+  display.println("User: ");
+  display.println(user);
   display.display();  
 
   forceReading = analogRead(forcePin);
   Serial.print("Analog reading = ");
   Serial.println(forceReading);
-  delay(1000);
+  //delay(1000);
   
 
   if(forceReading > 800){
@@ -147,21 +194,22 @@ void loop() {
   
 }
 
+
 void timer(){
   display.clearDisplay();
-  display.setTextSize(3);
+  display.display();
+  display.setTextSize(5);
   display.setCursor(0, 0);
   int seconds = 0;
   Serial.print("Seconds = ");
   Serial.println(seconds);
   display.println(seconds);
-//  display.flip();
   display.display();
   delay(1000);
     
   do {
     display.clearDisplay();
-    display.setTextSize(3);
+    display.setTextSize(5);
     display.setCursor(0, 0);
     display.setTextColor(WHITE);
     seconds++;
@@ -183,14 +231,14 @@ void timer(){
   Serial.print("Total = ");
   Serial.println(seconds);
   display.setCursor(0, 0);
-  display.setTextSize(2);
+  display.setTextSize(3);
   display.println("Total: ");
   display.print(seconds);
 //  display.flip();
   display.display();
   
   // Create json object string to send to Google Sheets
-  payload = payload_base + "\"" + seconds  + "\"}";
+  payload = payload_base + "\"" + user  + "\", \"values\": " + "\"" + seconds  + "\"}";
   
   // Publish data to Google Sheets
   Serial.println("Publishing data...");
@@ -201,12 +249,18 @@ void timer(){
     display.setTextSize(2);
     display.println("Time");
     display.println("Logged");
-//    display.flip();
     display.display();
   }
   else{
     // do stuff here if publish was not ful
     Serial.println("Error while connecting");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.setTextSize(2);
+    display.println("Error");
+    display.println("Logging");
+    display.println("Time");
+    display.display();
   }
 
 // a delay of several seconds is required before publishing again    
